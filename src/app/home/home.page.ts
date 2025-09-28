@@ -14,5 +14,9 @@ export class HomePage {
     rfidPlugin.helloWorld().then((result) => {
       console.log(result);
     });
+
+    rfidPlugin.addListener('tagReceived', (tag) => {
+      console.log('Tag received:', tag);
+    });
   }
 }
