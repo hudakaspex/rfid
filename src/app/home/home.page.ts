@@ -10,22 +10,25 @@ import { rfidPlugin } from '../plugins/rfid-plugin';
 })
 export class HomePage {
   constructor() {
-    console.log('rfidPlugin', rfidPlugin);
-    rfidPlugin.helloWorld().then((result) => {
-      console.log(result);
-    });
-
-    rfidPlugin.initialize()
-    .then(() => {
-      console.log('RFID plugin initialized');
-      rfidPlugin.connect().then(() => {
-        console.log('Connected to RFID reader');
-        rfidPlugin.startInventory();
-      });
-    });
-
-    rfidPlugin.addListener('tagReceived', (tag) => {
-      console.log('Tag received:', tag);
-    });
+    this.initRFID();
   }
+
+  async initRFID() {
+  const result = await rfidPlugin.startReader({
+    serialPort: "/dev/ttyS0",
+    baudRate: 115200,
+  });
+  console.log("Connected:", result.connected);
+
+  // Listen for tag reads
+  rfidPlugin.addListener("onRFIDRead", (data: any) => {
+    console.log("Tag Read:", data.epc, "RSSI:", data.rssi);
+  });
+}
+
+async adjustPower() {
+  await rfidPlugin.setPower({ power: 80 });
+  const power = await rfidPlugin.getPower();
+  console.log("Current Power:", power.power);
+}
 }
