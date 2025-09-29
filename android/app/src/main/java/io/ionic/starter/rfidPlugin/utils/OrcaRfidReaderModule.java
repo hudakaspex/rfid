@@ -12,11 +12,23 @@ import java.util.List;
 
 public class OrcaRfidReaderModule {
   private static final String TAG = "OrcaRfidReaderModule";
+  private static final String[] DEFAULT_DEVICES = {
+    "/dev/ttyS0",
+    "/dev/ttyS1",
+    "/dev/ttyS2",
+    "/dev/ttyS3",
+    "/dev/ttyS4"
+  };
 
   private final OrcaRfidReaderPlugin plugin;
   private final ToneGenerator toneGen = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+  
+  private String lastDevicePath = "/dev/ttyS4"; // Default device path
+  private int lastBaudRate = 115200; // Default baud rate
+  private boolean isConnecting = false;
+  private List<String> cachedDevices = null;
 
-  private final List<String> serialPorts = new ArrayList<>();
+  private final SerialPortUtils serialPortUtils;
   private final ReaderHelper readerHelper;
   private boolean isBeepEnabled = true;
   private String matchEPCs = "";
@@ -24,30 +36,132 @@ public class OrcaRfidReaderModule {
   public OrcaRfidReaderModule(OrcaRfidReaderPlugin plugin) {
     this.plugin = plugin;
     this.readerHelper = new ReaderHelper(this);
+    this.serialPortUtils = new SerialPortUtils(plugin.getContext());
   }
 
   public boolean startReader(String serialPort, int baudRate) {
-    Log.i(TAG, "Starting UHF Reader on Serial Port: " + serialPort + " with Baud Rate: " + baudRate);
+    if (isConnecting) {
+      Log.w(TAG, "Connection already in progress");
+      return false;
+    }
+
+    isConnecting = true;
+    try {
+      // Validate serial port
+      List<String> availablePorts = findSerialPorts();
+      if (!availablePorts.contains(serialPort)) {
+        Log.e(TAG, "Invalid serial port: " + serialPort);
+        return false;
+      }
+      
+      // Validate baud rate
+      if (!SerialPortUtils.getCommonBaudRates().contains(baudRate)) {
+        Log.e(TAG, "Invalid baud rate: " + baudRate);
+        return false;
+      }
+      
+      Log.i(TAG, String.format("Starting UHF Reader on Port: %s with Baud Rate: %d", 
+            serialPort, baudRate));
+      
+      boolean success = readerHelper.startReader(serialPort, baudRate);
+      if (success) {
+        lastDevicePath = serialPort;
+        lastBaudRate = baudRate;
+      }
+      return success;
+    } finally {
+      isConnecting = false;
+    }
+    
+    // Validate baud rate
+    if (!SerialPortUtils.getCommonBaudRates().contains(baudRate)) {
+      Log.e(TAG, "Invalid baud rate: " + baudRate);
+      return false;
+    }
+    
+    Log.i(TAG, String.format("Starting UHF Reader on Port: %s (%s) with Baud Rate: %d", 
+          selectedPort.getPortName(), serialPort, baudRate));
+    
     return readerHelper.startReader(serialPort, baudRate);
   }
 
-  public List<String> listSerialPorts() {
-    if (serialPorts.isEmpty()) {
-      File devDirectory = new File("/dev");
-      if (devDirectory.exists() && devDirectory.isDirectory()) {
-        File[] files = devDirectory.listFiles();
-        if (files != null) {
-          for (File file : files) {
-            if (file.getName().startsWith("tty")) {
-              serialPorts.add(file.getAbsolutePath());
+  public boolean startReaderWithFirstAvailable() {
+    List<SerialPortInfo> availablePorts = listSerialPorts();
+    if (availablePorts.isEmpty()) {
+      Log.e(TAG, "No serial ports available");
+      return false;
+    }
+    
+    // Get first available port and default baud rate
+    SerialPortInfo firstPort = availablePorts.get(0);
+    int defaultBaudRate = SerialPortUtils.getCommonBaudRates().get(0); // Usually 9600
+    
+    Log.i(TAG, "Attempting to start reader with first available port: " + firstPort.getPortName());
+    return startReader(firstPort.getDevicePath(), defaultBaudRate);
+  }
+
+  public List<String> findSerialPorts() {
+    if (cachedDevices != null) {
+      return new ArrayList<>(cachedDevices);
+    }
+
+    List<String> devices = new ArrayList<>();
+    File devDirectory = new File("/dev");
+
+    if (devDirectory.exists() && devDirectory.isDirectory()) {
+      File[] files = devDirectory.listFiles();
+      if (files != null) {
+        for (File file : files) {
+          String name = file.getName();
+          // Check for various types of serial ports
+          if (name.startsWith("ttyS") || // Standard serial ports
+              name.startsWith("ttyUSB") || // USB to serial converters
+              name.startsWith("ttyACM") || // ACM devices
+              name.startsWith("ttyAMA")) { // Raspberry Pi serial port
+            
+            String devicePath = file.getAbsolutePath();
+            // Check if port is accessible
+            if (file.canRead() && file.canWrite()) {
+              devices.add(devicePath);
+              Log.d(TAG, "Found serial port: " + devicePath);
             }
           }
         }
-      } else {
-        Log.e(TAG, "Error Listing Serial Ports! /dev Directory does not exist!");
       }
     }
-    return serialPorts;
+
+    // If no devices found, use default list
+    if (devices.isEmpty()) {
+      Log.i(TAG, "No serial ports found, using default list");
+      devices.addAll(Arrays.asList(DEFAULT_DEVICES));
+    }
+
+    // Cache the results
+    cachedDevices = new ArrayList<>(devices);
+    return devices;
+  }
+
+  public void clearSerialPortCache() {
+    cachedDevices = null;
+  }
+
+  public String getDefaultSerialPort() {
+    List<String> ports = findSerialPorts();
+    if (!ports.isEmpty()) {
+      // Try to find the last used port first
+      if (lastDevicePath != null && ports.contains(lastDevicePath)) {
+        return lastDevicePath;
+      }
+      // Try to find ttyS4 as it's commonly used
+      for (String port : ports) {
+        if (port.contains("ttyS4")) {
+          return port;
+        }
+      }
+      // Return the first available port
+      return ports.get(0);
+    }
+    return DEFAULT_DEVICES[4]; // Return /dev/ttyS4 as last resort
   }
 
   public int getReaderPower() {
@@ -61,13 +175,7 @@ public class OrcaRfidReaderModule {
   }
 
   public List<Integer> listBaudRates() {
-    List<Integer> baudRates = new ArrayList<>();
-    baudRates.add(9600);
-    baudRates.add(19200);
-    baudRates.add(38400);
-    baudRates.add(57600);
-    baudRates.add(115200);
-    return baudRates;
+    return SerialPortUtils.getCommonBaudRates();
   }
 
   public boolean shouldPlayBeep(String epc) {
