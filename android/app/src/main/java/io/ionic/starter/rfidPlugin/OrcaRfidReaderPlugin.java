@@ -2,14 +2,18 @@ package io.ionic.starter.rfidPlugin;
 
 import android.util.Log;
 
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.util.List;
+
 import io.ionic.starter.rfidPlugin.utils.OrcaRfidReaderModule;
 import io.ionic.starter.rfidPlugin.utils.ReaderHelper;
+import io.ionic.starter.rfidPlugin.utils.SerialPortInfo;
 
 @CapacitorPlugin(name = "OrcaRfidReader")
 public class OrcaRfidReaderPlugin extends Plugin {
@@ -83,4 +87,26 @@ public class OrcaRfidReaderPlugin extends Plugin {
   public boolean shouldPlayBeep(String epc) {
     return true; // Always beep, or implement filtering logic
   }
+
+  @PluginMethod
+  public void getSerialPorts(PluginCall call) {
+    try {
+      List<SerialPortInfo> ports = readerHelper.getSerialPort();
+      JSArray result = new JSArray();
+
+      for (SerialPortInfo port : ports) {
+        JSObject obj = new JSObject();
+        obj.put("name", port.getPortName());
+        obj.put("path", port.getDevicePath());
+        result.put(obj);
+      }
+
+      JSObject ret = new JSObject();
+      ret.put("ports", result);
+      call.resolve(ret);
+    } catch (Exception e) {
+      call.reject("Error listing serial ports: " + e.getMessage());
+    }
+  }
+
 }

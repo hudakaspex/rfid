@@ -18,13 +18,14 @@ import com.payne.reader.process.ReaderImpl;
 import com.payne.reader.util.ArrayUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ReaderHelper {
   private static final String TAG = "OrcaRfidReaderModule";
   private static final int MAX_POWER = 33;
 
-  private final OrcaRfidReaderModule mModule;
+  private OrcaRfidReaderModule mModule = null;
   private final Reader mReader = ReaderImpl.create(AntennaCount.SINGLE_CHANNEL);
   private SerialPortHandle mConnectHandle = null;
   private int currentPower = 33;
@@ -57,6 +58,10 @@ public class ReaderHelper {
 
   public ReaderHelper(OrcaRfidReaderModule module) {
     this.mModule = module;
+  }
+
+  public List<SerialPortInfo> getSerialPort() {
+    return this.mModule.listSerialPorts();
   }
 
   public boolean startReader(String serialPort, int baudRate) {
