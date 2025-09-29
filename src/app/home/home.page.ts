@@ -15,6 +15,15 @@ export class HomePage {
       console.log(result);
     });
 
+    rfidPlugin.initialize()
+    .then(() => {
+      console.log('RFID plugin initialized');
+      rfidPlugin.connect().then(() => {
+        console.log('Connected to RFID reader');
+        rfidPlugin.startInventory();
+      });
+    });
+
     rfidPlugin.addListener('tagReceived', (tag) => {
       console.log('Tag received:', tag);
     });
