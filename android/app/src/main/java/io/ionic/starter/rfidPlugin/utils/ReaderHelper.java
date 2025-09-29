@@ -62,7 +62,7 @@ public class ReaderHelper {
   public boolean startReader(String serialPort, int baudRate) {
     try {
       if (mConnectHandle != null) {
-        //mConnectHandle.release();
+        //mConnectHandle.close();
       }
       ModuleManager moduleManager = ModuleManager.newInstance();
       moduleManager.setUHFStatus(true);

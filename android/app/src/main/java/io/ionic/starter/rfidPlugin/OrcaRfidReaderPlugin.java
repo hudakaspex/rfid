@@ -1,4 +1,4 @@
-package io.ionic.starter.rfidPlugin.utils;
+package io.ionic.starter.rfidPlugin;
 
 import android.util.Log;
 
@@ -7,6 +7,9 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+
+import io.ionic.starter.rfidPlugin.utils.OrcaRfidReaderModule;
+import io.ionic.starter.rfidPlugin.utils.ReaderHelper;
 
 @CapacitorPlugin(name = "OrcaRfidReader")
 public class OrcaRfidReaderPlugin extends Plugin {
