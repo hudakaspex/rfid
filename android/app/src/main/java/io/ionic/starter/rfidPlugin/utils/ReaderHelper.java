@@ -66,11 +66,11 @@ public class ReaderHelper {
 
   public boolean startReader(String serialPort, int baudRate) {
     try {
+      boolean isPowerOn = PowerUtils.powerOn();
+      Log.i(TAG, "Power On: " + isPowerOn);
       if (mConnectHandle != null) {
         //mConnectHandle.close();
       }
-      ModuleManager moduleManager = ModuleManager.newInstance();
-      moduleManager.setUHFStatus(true);
       mConnectHandle = new SerialPortHandle(serialPort, baudRate);
 
       mReader.setCmdTimeout(6000L);

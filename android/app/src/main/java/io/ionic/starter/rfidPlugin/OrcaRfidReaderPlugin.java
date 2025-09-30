@@ -15,7 +15,7 @@ import io.ionic.starter.rfidPlugin.utils.OrcaRfidReaderModule;
 import io.ionic.starter.rfidPlugin.utils.ReaderHelper;
 import io.ionic.starter.rfidPlugin.utils.SerialPortInfo;
 
-@CapacitorPlugin(name = "OrcaRfidReader")
+@CapacitorPlugin(name = "OrcaRfidReadera")
 public class OrcaRfidReaderPlugin extends Plugin {
   private static final String TAG = "OrcaRfidReaderPlugin";
   private ReaderHelper readerHelper;
@@ -70,14 +70,6 @@ public class OrcaRfidReaderPlugin extends Plugin {
     call.resolve();
   }
 
-  // Called by ReaderHelper when a tag is read
-  public void notifyTagRead(String epc, int rssi) {
-    JSObject data = new JSObject();
-    data.put("epc", epc);
-    data.put("rssi", rssi);
-    notifyListeners("onRFIDRead", data);
-  }
-
   // Utility for beep
   public void playBeep() {
     Log.i(TAG, "Beep requested (implement sound here)");
@@ -108,5 +100,4 @@ public class OrcaRfidReaderPlugin extends Plugin {
       call.reject("Error listing serial ports: " + e.getMessage());
     }
   }
-
 }

@@ -14,11 +14,18 @@ export class HomePage {
   }
 
   async initRFID() {
+  const serialPorts = await rfidPlugin.getSerialPorts();
+  console.log("Available Serial Ports:", serialPorts);
+  const path = serialPorts.ports?.length > 0 ? serialPorts.ports[0]?.path : "/dev/tty";
   const result = await rfidPlugin.startReader({
-    serialPort: "/dev/ttyS0",
+    serialPort: path,
     baudRate: 115200,
   });
   console.log("Connected:", result.connected);
+  if (result.connected) {
+    await this.adjustPower();
+  }
+
 
   // Listen for tag reads
   rfidPlugin.addListener("onRFIDRead", (data: any) => {

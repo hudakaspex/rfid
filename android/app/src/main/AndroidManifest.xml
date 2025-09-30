@@ -36,16 +36,19 @@
     </application>
 
     <!-- Permissions -->
+    <uses-permission android:name="android.permission.BLUETOOTH" /> <!-- 在android 6.0之后要用蓝牙还需要添加一个模糊定位的权限 -->
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- 扫描蓝牙设备或者操作蓝牙设置 -->
 
-    <uses-permission android:name="android.permission.INTERNET" />
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-    android:maxSdkVersion="32" />
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-  <uses-permission
-    android:name="android.hardware.usb.host"
-    android:required="false" />
-  <!-- 因为部分手机上是没有otg的所以需要加入特性 -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-permission
+        android:name="android.hardware.usb.host"
+        android:required="false" />
   <uses-feature
     android:name="android.hardware.usb.host"
     android:required="false" />

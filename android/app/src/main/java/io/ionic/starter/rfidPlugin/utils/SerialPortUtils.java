@@ -20,13 +20,13 @@ public class SerialPortUtils {
 
     public List<SerialPortInfo> getAvailableSerialPorts() {
         List<SerialPortInfo> ports = new ArrayList<>();
-        
+
         // Check traditional serial ports
         addTraditionalSerialPorts(ports);
-        
+
         // Check USB devices
         addUsbSerialDevices(ports);
-        
+
         return ports;
     }
 
@@ -41,10 +41,10 @@ public class SerialPortUtils {
                         try {
                             // Check if port is accessible
                             if (file.canRead() && file.canWrite()) {
-                                String description = name.startsWith("ttyUSB") ? "USB Serial Port" : 
-                                                   name.startsWith("ttyACM") ? "ACM Serial Port" : 
+                                String description = name.startsWith("ttyUSB") ? "USB Serial Port" :
+                                                   name.startsWith("ttyACM") ? "ACM Serial Port" :
                                                    "Serial Port";
-                                
+
                                 ports.add(new SerialPortInfo(
                                     name,
                                     file.getAbsolutePath(),
@@ -72,7 +72,7 @@ public class SerialPortUtils {
                         String.format("USB%04X:%04X", device.getVendorId(), device.getProductId()),
                         device.getDeviceName(),
                         true,
-                        String.format("USB Serial Device (VID: %04X, PID: %04X)", 
+                        String.format("USB Serial Device (VID: %04X, PID: %04X)",
                             device.getVendorId(), device.getProductId())
                     ));
                 }
@@ -96,7 +96,7 @@ public class SerialPortUtils {
         }
 
         // Check interface class for CDC
-        return device.getInterfaceCount() > 0 && 
+        return device.getInterfaceCount() > 0 &&
                device.getInterface(0).getInterfaceClass() == 0x0A;  // CDC Data
     }
 
